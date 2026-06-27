@@ -238,7 +238,8 @@ h2 { margin: 0; font-size: clamp(28px, 4vw, 42px); letter-spacing: -.05em; }
 .qualifier { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; min-height: 58px; padding: 12px 16px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .qualifier:nth-child(4n) { border-right: 0; }
 .qualifier:nth-last-child(-n+4) { border-bottom: 0; }
-.qualifier span { color: var(--muted); font: 700 9px ui-monospace, monospace; }
+.qualifier img, .qualifier span { width: 25px; height: 25px; object-fit: contain; }
+.qualifier span { display: grid; place-items: center; border: 1px dashed var(--line); border-radius: 50%; color: var(--muted); font-size: 10px; }
 .qualifier b { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .qualifier i { color: var(--lime); font-size: 11px; font-style: normal; }
 .qualifier.pending { color: #63776f; background: rgba(7,18,15,.3); }

@@ -63,10 +63,10 @@ function render() {
         <strong>${qualifiers.length}<span>/32</span></strong>
       </div>
       <div class="qualifier-progress"><span style="width:${qualifiers.length / 32 * 100}%"></span></div>
-      <div class="qualifier-grid">${qualifiers.map((team, index) =>
-        `<div class="qualifier"><span>${String(index + 1).padStart(2, "0")}</span><b>${escapeHtml(team)}</b><i>✓</i></div>`
-      ).join("")}${Array.from({ length: 32 - qualifiers.length }, (_, index) =>
-        `<div class="qualifier pending"><span>${String(qualifiers.length + index + 1).padStart(2, "0")}</span><b>Still up for grabs</b></div>`
+      <div class="qualifier-grid">${qualifiers.map((team) =>
+        `<div class="qualifier"><img src="${escapeHtml(team.flag)}" alt="" loading="lazy"><b>${escapeHtml(team.name)}</b><i>✓</i></div>`
+      ).join("")}${Array.from({ length: 32 - qualifiers.length }, () =>
+        `<div class="qualifier pending"><span aria-hidden="true">?</span><b>Still up for grabs</b></div>`
       ).join("")}</div>
     </div>`;
     return;

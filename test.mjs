@@ -16,6 +16,7 @@ const roundOf32 = Array.from({ length: 16 }, (_, match) => ({
 assert.equal(roundOf32Teams(roundOf32).length, 32);
 roundOf32[0].competitions[0].competitors[0].team.isActive = false;
 assert.equal(qualifiedTeams(roundOf32).length, 31);
+assert.deepEqual(qualifiedTeams(roundOf32)[0], { name: "Team 2", flag: "" });
 assert.deepEqual(roundOf32Teams(roundOf32), []);
 
 const result = applyResults(

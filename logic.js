@@ -26,19 +26,19 @@ export function normalizeTeam(value = "") {
 }
 
 export function roundOf32Teams(events) {
-  const names = qualifiedTeams(events);
-  return names.length === 32 ? names : [];
+  const teams = qualifiedTeams(events);
+  return teams.length === 32 ? teams.map(({ name }) => name) : [];
 }
 
 export function qualifiedTeams(events) {
-  const names = events
+  const teams = events
     .filter((event) => event.season?.slug === "round-of-32")
     .flatMap((event) => event.competitions?.[0]?.competitors || [])
     .map((competitor) => competitor.team)
     .filter((team) => team?.isActive && team.displayName)
-    .map((team) => team.displayName);
-  return names.filter((name, index) =>
-    names.findIndex((candidate) => normalizeTeam(candidate) === normalizeTeam(name)) === index
+    .map((team) => ({ name: team.displayName, flag: team.logo || "" }));
+  return teams.filter((team, index) =>
+    teams.findIndex((candidate) => normalizeTeam(candidate.name) === normalizeTeam(team.name)) === index
   );
 }
 
