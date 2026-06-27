@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { applyResults, normalizeTeam, qualifiedTeams, roundOf32Teams, shuffle } from "./logic.js";
+import { applyResults, knockoutMatches, normalizeTeam, qualifiedTeams, roundOf32Teams, shuffle } from "./logic.js";
 
 const teams = Array.from({ length: 32 }, (_, index) => `Team ${index + 1}`);
 assert.deepEqual(shuffle(teams).toSorted(), teams.toSorted());
@@ -37,4 +37,16 @@ const result = applyResults(
   }]
 );
 assert.deepEqual(result.entries.map(({ stage }) => stage), ["R16", "OUT"]);
+assert.deepEqual(knockoutMatches(result.entries, [{
+  id: "1",
+  date: "2026-06-29T00:00Z",
+  season: { slug: "round-of-32" },
+  competitions: [{
+    status: { type: { state: "post", completed: true, shortDetail: "Final" } },
+    competitors: [
+      { score: "2", winner: true, team: { displayName: "Mexico", isActive: true, logo: "mex.png" } },
+      { score: "1", winner: false, team: { displayName: "South Africa", isActive: true, logo: "rsa.png" } }
+    ]
+  }]
+}])[0].sides.map(({ entry, winner }) => [entry.player, winner]), [["Nabil", true], ["Stephanie", false]]);
 console.log("Draw logic passed");

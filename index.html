@@ -107,6 +107,20 @@
       </form>
     </dialog>
 
+    <dialog id="drawDialog" class="draw-dialog">
+      <div class="draw-reveal">
+        <p class="eyebrow">THE DRAW IS LIVE</p>
+        <span id="revealCount">1 / 32</span>
+        <strong id="revealNumber">01</strong>
+        <h2 id="revealPlayer">Player</h2>
+        <div class="reveal-team">
+          <img id="revealFlag" alt="" />
+          <b id="revealTeam">Team</b>
+        </div>
+        <button class="button button-primary wide" id="revealButton">Reveal all now <b>→</b></button>
+      </div>
+    </dialog>
+
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script type="module" src="script.js"></script>
   </body>

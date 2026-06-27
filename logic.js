@@ -42,6 +42,38 @@ export function qualifiedTeams(events) {
   );
 }
 
+export function knockoutMatches(entries, events) {
+  const stages = new Set(["round-of-32", "round-of-16", "quarterfinals", "semifinals", "3rd-place-match", "final"]);
+  return events.filter((event) => stages.has(event.season?.slug)).sort((a, b) =>
+    new Date(a.date) - new Date(b.date)
+  ).map((event) => {
+    const competition = event.competitions?.[0] || {};
+    const type = competition.status?.type || event.status?.type || {};
+    return {
+      id: event.id,
+      stage: event.season.slug,
+      date: event.date,
+      state: type.state || "pre",
+      completed: Boolean(type.completed),
+      detail: type.shortDetail || type.detail || type.description || "Scheduled",
+      clock: competition.status?.displayClock || event.status?.displayClock || "",
+      sides: (competition.competitors || []).map((competitor) => {
+        const team = competitor.team || {};
+        const names = [team.displayName, team.shortDisplayName, team.name, team.location, team.abbreviation]
+          .map(normalizeTeam);
+        const entry = entries.find((item) => names.includes(normalizeTeam(item.team)));
+        return {
+          team: team.isActive ? team.displayName : "TBD",
+          flag: team.logo || "",
+          score: competitor.score ?? "",
+          winner: Boolean(competitor.winner),
+          entry: entry ? { number: entry.number, player: entry.player } : null
+        };
+      })
+    };
+  });
+}
+
 export function applyResults(entries, events) {
   const updated = entries.map((entry) => ({ ...entry }));
   const unmatched = new Set();
