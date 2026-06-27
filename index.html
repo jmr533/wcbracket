@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#07120f" />
+    <meta
+      name="description"
+      content="A private 2026 World Cup knockout pool for 32 friends."
+    />
+    <title>The 32 — World Cup Pool</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="noise" aria-hidden="true"></div>
+    <header class="site-header">
+      <a class="brand" href="#" aria-label="The 32 home">
+        <span class="brand-mark">32</span>
+        <span>THE 32 <small>WORLD CUP POOL</small></span>
+      </a>
+      <div class="live-pill"><span></span> Draw pending</div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="eyebrow">2026 KNOCKOUT POOL · 32 FRIENDS · ONE CHAMPION</div>
+        <h1>Every match.<br /><em>Something on it.</em></h1>
+        <p class="hero-copy">
+          When the Round of 32 is set, every entry gets a team. Follow the
+          bracket, survive each round, and claim the pot.
+        </p>
+        <div class="hero-actions">
+          <button class="button button-primary" id="drawButton">
+            <span>Run the team draw</span><b>→</b>
+          </button>
+          <button class="button button-secondary" id="updateButton" disabled>
+            Update standings
+          </button>
+        </div>
+        <p class="draw-note" id="drawNote">One draw. 32 teams. No do-overs.</p>
+      </section>
+
+      <section class="pot-card" aria-label="Prize breakdown">
+        <div class="pot-total">
+          <span>TOTAL POT</span>
+          <strong>$640</strong>
+          <small>32 entries × $20</small>
+        </div>
+        <ol class="prizes">
+          <li><span class="place gold">1</span><div><b>Champion</b><small>Winner takes</small></div><strong>$300</strong></li>
+          <li><span class="place silver">2</span><div><b>Runner-up</b><small>Second place</small></div><strong>$200</strong></li>
+          <li><span class="place bronze">3</span><div><b>Third</b><small>Semifinalist</small></div><strong>$100</strong></li>
+          <li><span class="place">4</span><div><b>Fourth</b><small>Semifinalist</small></div><strong>$40</strong></li>
+        </ol>
+      </section>
+
+      <section class="board">
+        <div class="board-heading">
+          <div>
+            <span class="section-number">01</span>
+            <div>
+              <p class="eyebrow">TOURNAMENT TRACKER</p>
+              <h2>The road to the final</h2>
+            </div>
+          </div>
+          <div class="tabs" role="tablist" aria-label="Tournament views">
+            <button class="tab active" role="tab" aria-selected="true" data-view="bracket">Bracket</button>
+            <button class="tab" role="tab" aria-selected="false" data-view="entries">All entries</button>
+          </div>
+        </div>
+
+        <div id="bracketView" class="view"></div>
+        <div id="entriesView" class="view" hidden></div>
+      </section>
+    </main>
+
+    <footer>
+      <span>THE 32 · 2026</span>
+      <span>Built for bragging rights</span>
+    </footer>
+
+    <dialog id="drawDialog">
+      <form method="dialog" class="modal" id="drawForm">
+        <button class="modal-close" value="cancel" aria-label="Close">×</button>
+        <p class="eyebrow">THE ONE-TIME DRAW</p>
+        <h2>Paste the Round of 32</h2>
+        <p>Enter one team per line. We’ll shuffle them securely and assign one to every numbered entry.</p>
+        <label for="teamsInput">32 qualified teams</label>
+        <textarea id="teamsInput" rows="12" placeholder="Argentina&#10;Brazil&#10;France&#10;…" spellcheck="false"></textarea>
+        <p class="field-meta"><span id="teamCount">0 / 32 teams</span><span id="drawError" role="alert"></span></p>
+        <button class="button button-primary wide" id="confirmDraw" value="default">
+          Draw all 32 teams <b>→</b>
+        </button>
+      </form>
+    </dialog>
+
+    <dialog id="updateDialog">
+      <form method="dialog" class="modal" id="updateForm">
+        <button class="modal-close" value="cancel" aria-label="Close">×</button>
+        <p class="eyebrow">UPDATE THE BOARD</p>
+        <h2>Record a result</h2>
+        <p>Move a team forward after a win, or mark them out after elimination.</p>
+        <label for="entrySelect">Entry</label>
+        <select id="entrySelect"></select>
+        <label for="stageSelect">Current standing</label>
+        <select id="stageSelect">
+          <option value="R32">Round of 32</option>
+          <option value="R16">Round of 16</option>
+          <option value="QF">Quarterfinal</option>
+          <option value="SF">Semifinal</option>
+          <option value="FOURTH">Fourth place</option>
+          <option value="THIRD">Third place</option>
+          <option value="FINAL">Final</option>
+          <option value="RUNNER_UP">Runner-up</option>
+          <option value="CHAMPION">Champion</option>
+          <option value="OUT">Eliminated</option>
+        </select>
+        <button class="button button-primary wide" value="default">Save standing <b>→</b></button>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="script.js"></script>
+  </body>
+</html>
