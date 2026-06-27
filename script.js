@@ -1,4 +1,4 @@
-import { applyResults, parseTeams, shuffle } from "./logic.js";
+import { applyResults, roundOf32Teams, shuffle } from "./logic.js";
 
 const players = [
   "Nabil", "Stephanie", "Dave", "Kristin", "Dominick", "Ben", "Matthew W", "Kevin",
@@ -75,27 +75,30 @@ function toast(message) {
   setTimeout(() => $("#toast").classList.remove("show"), 2400);
 }
 
-$("#drawButton").addEventListener("click", () => $("#drawDialog").showModal());
-$("#teamsInput").addEventListener("input", ({ target }) => {
-  const count = target.value.split("\n").filter((team) => team.trim()).length;
-  $("#teamCount").textContent = `${count} / 32 teams`;
-  $("#drawError").textContent = "";
-});
-
-$("#drawForm").addEventListener("submit", (event) => {
-  if (event.submitter?.value === "cancel") return;
-  event.preventDefault();
-  const { teams, error } = parseTeams($("#teamsInput").value);
-  if (error) {
-    $("#drawError").textContent = error;
-    return;
+$("#drawButton").addEventListener("click", async () => {
+  const button = $("#drawButton");
+  button.disabled = true;
+  button.querySelector("span").textContent = "Fetching ESPN teams…";
+  try {
+    const response = await fetch(espnUrl);
+    if (!response.ok) throw new Error(`ESPN returned ${response.status}`);
+    const teams = roundOf32Teams((await response.json()).events || []);
+    if (!teams.length) {
+      toast("The Round of 32 is not fully set yet · try again later");
+      return;
+    }
+    const assigned = shuffle(teams);
+    entries = entries.map((entry, index) => ({ ...entry, team: assigned[index], stage: "R32" }));
+    save();
+    render();
+    toast("ESPN teams fetched · the draw is complete");
+  } catch (error) {
+    console.error(error);
+    toast("Could not fetch ESPN teams · try again later");
+  } finally {
+    button.querySelector("span").textContent = "Fetch teams & run the draw";
+    button.disabled = false;
   }
-  const assigned = shuffle(teams);
-  entries = entries.map((entry, index) => ({ ...entry, team: assigned[index], stage: "R32" }));
-  save();
-  $("#drawDialog").close();
-  render();
-  toast("The draw is complete");
 });
 
 $("#updateButton").addEventListener("click", async () => {

@@ -31,7 +31,7 @@
         </p>
         <div class="hero-actions">
           <button class="button button-primary" id="drawButton">
-            <span>Run the team draw</span><b>→</b>
+            <span>Fetch teams & run the draw</span><b>→</b>
           </button>
           <button class="button button-secondary" id="updateButton" disabled>
             Sync ESPN results
@@ -81,21 +81,6 @@
       <span>THE 32 · 2026</span>
       <span>Built for bragging rights</span>
     </footer>
-
-    <dialog id="drawDialog">
-      <form method="dialog" class="modal" id="drawForm">
-        <button class="modal-close" value="cancel" aria-label="Close">×</button>
-        <p class="eyebrow">THE ONE-TIME DRAW</p>
-        <h2>Paste the Round of 32</h2>
-        <p>Enter one team per line. We’ll shuffle them securely and assign one to every numbered entry.</p>
-        <label for="teamsInput">32 qualified teams</label>
-        <textarea id="teamsInput" rows="12" placeholder="Argentina&#10;Brazil&#10;France&#10;…" spellcheck="false"></textarea>
-        <p class="field-meta"><span id="teamCount">0 / 32 teams</span><span id="drawError" role="alert"></span></p>
-        <button class="button button-primary wide" id="confirmDraw" value="default">
-          Draw all 32 teams <b>→</b>
-        </button>
-      </form>
-    </dialog>
 
     <dialog id="updateDialog">
       <form method="dialog" class="modal" id="updateForm">

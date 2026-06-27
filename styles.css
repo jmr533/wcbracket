@@ -25,7 +25,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-button, textarea, select { font: inherit; }
+button, select { font: inherit; }
 button { cursor: pointer; }
 
 .noise {
@@ -259,14 +259,10 @@ dialog::backdrop { background: rgba(1,8,6,.82); backdrop-filter: blur(7px); }
 .modal { position: relative; padding: 34px; }
 .modal-close { position: absolute; top: 17px; right: 17px; width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 9px; background: transparent; color: var(--muted); font-size: 20px; }
 .modal h2 { margin-bottom: 10px; font-size: 31px; }
-.modal > p:not(.eyebrow, .field-meta) { margin: 0 0 25px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.modal > p:not(.eyebrow) { margin: 0 0 25px; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .modal label { display: block; margin: 17px 0 8px; color: #b7c8c1; font-size: 10px; font-weight: 850; letter-spacing: .09em; text-transform: uppercase; }
-textarea, select { width: 100%; border: 1px solid var(--line); border-radius: 11px; outline: 0; background: #081611; color: var(--paper); }
-textarea { resize: vertical; min-height: 190px; padding: 14px; font: 12px/1.5 ui-monospace, monospace; }
-select { min-height: 48px; padding: 0 12px; }
-textarea:focus, select:focus { border-color: rgba(201,255,87,.5); }
-.field-meta { display: flex; justify-content: space-between; min-height: 18px; margin: 7px 2px 9px; color: var(--muted); font-size: 10px; }
-#drawError { color: #ff9271; }
+select { width: 100%; min-height: 48px; padding: 0 12px; border: 1px solid var(--line); border-radius: 11px; outline: 0; background: #081611; color: var(--paper); }
+select:focus { border-color: rgba(201,255,87,.5); }
 
 .toast { position: fixed; right: 22px; bottom: 22px; z-index: 20; transform: translateY(20px); border: 1px solid rgba(201,255,87,.28); border-radius: 12px; padding: 13px 17px; background: #172c24; color: var(--paper); font-size: 12px; opacity: 0; pointer-events: none; transition: .22s ease; }
 .toast.show { transform: translateY(0); opacity: 1; }

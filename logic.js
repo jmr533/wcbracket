@@ -1,12 +1,3 @@
-export function parseTeams(value) {
-  const teams = value.split("\n").map((team) => team.trim()).filter(Boolean);
-  if (teams.length !== 32) return { teams, error: "Exactly 32 required" };
-  if (new Set(teams.map((team) => team.toLocaleLowerCase())).size !== 32) {
-    return { teams, error: "Team names must be unique" };
-  }
-  return { teams, error: "" };
-}
-
 export function shuffle(values) {
   const result = [...values];
   for (let index = result.length - 1; index > 0; index--) {
@@ -32,6 +23,16 @@ export function normalizeTeam(value = "") {
   const normalized = value.normalize("NFD").replace(/\p{Diacritic}/gu, "")
     .toLowerCase().replace(/[^a-z0-9]/g, "");
   return aliases[normalized] || normalized;
+}
+
+export function roundOf32Teams(events) {
+  const teams = events
+    .filter((event) => event.season?.slug === "round-of-32")
+    .flatMap((event) => event.competitions?.[0]?.competitors || [])
+    .map((competitor) => competitor.team);
+  if (teams.length !== 32 || teams.some((team) => !team?.isActive || !team.displayName)) return [];
+  const names = teams.map((team) => team.displayName);
+  return new Set(names.map(normalizeTeam)).size === 32 ? names : [];
 }
 
 export function applyResults(entries, events) {

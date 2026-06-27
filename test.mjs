@@ -1,11 +1,21 @@
 import assert from "node:assert/strict";
-import { applyResults, normalizeTeam, parseTeams, shuffle } from "./logic.js";
+import { applyResults, normalizeTeam, roundOf32Teams, shuffle } from "./logic.js";
 
 const teams = Array.from({ length: 32 }, (_, index) => `Team ${index + 1}`);
-assert.equal(parseTeams(teams.join("\n")).error, "");
-assert.equal(parseTeams([...teams.slice(0, 31), "TEAM 1"].join("\n")).error, "Team names must be unique");
 assert.deepEqual(shuffle(teams).toSorted(), teams.toSorted());
 assert.equal(normalizeTeam("U.S.A."), "unitedstates");
+
+const roundOf32 = Array.from({ length: 16 }, (_, match) => ({
+  season: { slug: "round-of-32" },
+  competitions: [{
+    competitors: [match * 2 + 1, match * 2 + 2].map((team) => ({
+      team: { displayName: `Team ${team}`, isActive: true }
+    }))
+  }]
+}));
+assert.equal(roundOf32Teams(roundOf32).length, 32);
+roundOf32[0].competitions[0].competitors[0].team.isActive = false;
+assert.deepEqual(roundOf32Teams(roundOf32), []);
 
 const result = applyResults(
   [
