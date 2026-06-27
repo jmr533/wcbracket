@@ -167,6 +167,7 @@ h1 em { color: var(--lime); font-style: normal; }
 .button b { margin-left: 24px; font-size: 18px; }
 .button-primary { background: var(--lime); color: var(--ink); }
 .button-secondary { border: 1px solid var(--line); background: var(--panel); color: var(--paper); }
+.button-quiet { background: transparent; color: var(--muted); }
 .button.wide { width: 100%; margin-top: 8px; }
 .draw-note { margin: 14px 0 0 2px; color: #6f857c; font-size: 11px; }
 

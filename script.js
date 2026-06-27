@@ -1,4 +1,4 @@
-import { parseTeams, shuffle } from "./logic.js";
+import { applyResults, parseTeams, shuffle } from "./logic.js";
 
 const players = [
   "Nabil", "Stephanie", "Dave", "Kristin", "Dominick", "Ben", "Matthew W", "Kevin",
@@ -14,6 +14,8 @@ const stageNames = {
 };
 const stageRank = ["CHAMPION", "RUNNER_UP", "THIRD", "FOURTH", "FINAL", "SF", "QF", "R16", "R32", "OUT"];
 const storageKey = "the32-pool";
+const syncKey = "the32-last-sync";
+const espnUrl = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=2026&limit=200";
 let entries = JSON.parse(localStorage.getItem(storageKey) || "null") ||
   players.map((player, index) => ({ number: index + 1, player, team: "", stage: "R32" }));
 
@@ -36,7 +38,11 @@ function render() {
   const hasDrawn = drawn();
   $("#drawButton").hidden = hasDrawn;
   $("#updateButton").disabled = !hasDrawn;
-  $("#drawNote").textContent = hasDrawn ? "Draw complete · standings saved on this device" : "One draw. 32 teams. No do-overs.";
+  $("#manualButton").disabled = !hasDrawn;
+  const lastSync = localStorage.getItem(syncKey);
+  $("#drawNote").textContent = hasDrawn
+    ? `Draw complete · ${lastSync ? `ESPN synced ${new Date(lastSync).toLocaleString()}` : "ready to sync with ESPN"}`
+    : "One draw. 32 teams. No do-overs.";
   $(".live-pill").innerHTML = `<span></span> ${hasDrawn ? "Tournament live" : "Draw pending"}`;
   $(".live-pill span").style.background = hasDrawn ? "var(--lime)" : "#ffbe41";
 
@@ -92,7 +98,31 @@ $("#drawForm").addEventListener("submit", (event) => {
   toast("The draw is complete");
 });
 
-$("#updateButton").addEventListener("click", () => {
+$("#updateButton").addEventListener("click", async () => {
+  const button = $("#updateButton");
+  button.disabled = true;
+  button.textContent = "Syncing…";
+  try {
+    const response = await fetch(espnUrl);
+    if (!response.ok) throw new Error(`ESPN returned ${response.status}`);
+    const data = await response.json();
+    const result = applyResults(entries, data.events || []);
+    entries = result.entries;
+    save();
+    localStorage.setItem(syncKey, new Date().toISOString());
+    render();
+    const warning = result.unmatched.length ? ` · ${result.unmatched.length} unmatched team(s)` : "";
+    toast(`${result.matches} completed knockout matches checked · ${result.changes} updates${warning}`);
+  } catch (error) {
+    console.error(error);
+    toast("ESPN sync failed · use manual edit and try again later");
+  } finally {
+    button.textContent = "Sync ESPN results";
+    button.disabled = false;
+  }
+});
+
+$("#manualButton").addEventListener("click", () => {
   const sorted = [...entries].sort((a, b) => stageRank.indexOf(a.stage) - stageRank.indexOf(b.stage) || a.number - b.number);
   $("#entrySelect").innerHTML = sorted.map((entry) =>
     `<option value="${entry.number}">#${entry.number} · ${escapeHtml(entry.player)} — ${escapeHtml(entry.team)}</option>`
