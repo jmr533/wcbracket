@@ -17,6 +17,7 @@ html { scroll-behavior: smooth; }
 body {
   margin: 0;
   min-width: 320px;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at 75% 5%, rgba(35, 119, 77, 0.24), transparent 27rem),
     var(--ink);
@@ -224,6 +225,25 @@ h2 { margin: 0; font-size: clamp(28px, 4vw, 42px); letter-spacing: -.05em; }
 .empty-board h3 { margin: 0; font-size: 20px; }
 .empty-board p { max-width: 390px; margin: 9px auto 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
 
+.qualifier-board { overflow: hidden; border: 1px solid var(--line); border-radius: 22px; background: rgba(13,29,24,.72); }
+.qualifier-heading { display: flex; align-items: flex-end; justify-content: space-between; padding: 28px 30px 24px; }
+.qualifier-heading .eyebrow { margin-bottom: 8px; }
+.qualifier-heading h3 { margin: 0; font-size: 28px; letter-spacing: -.04em; }
+.qualifier-heading p:last-child { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+.qualifier-heading > strong { color: var(--lime); font-size: 48px; line-height: .9; letter-spacing: -.06em; }
+.qualifier-heading > strong span { color: var(--muted); font-size: 18px; }
+.qualifier-progress { height: 3px; background: var(--line); }
+.qualifier-progress span { display: block; height: 100%; background: var(--lime); box-shadow: 0 0 18px rgba(201,255,87,.55); transition: width .5s ease; }
+.qualifier-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+.qualifier { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; min-height: 58px; padding: 12px 16px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.qualifier:nth-child(4n) { border-right: 0; }
+.qualifier:nth-last-child(-n+4) { border-bottom: 0; }
+.qualifier span { color: var(--muted); font: 700 9px ui-monospace, monospace; }
+.qualifier b { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.qualifier i { color: var(--lime); font-size: 11px; font-style: normal; }
+.qualifier.pending { color: #63776f; background: rgba(7,18,15,.3); }
+.qualifier.pending b { font-size: 10px; font-weight: 650; }
+
 .rounds { display: grid; grid-template-columns: repeat(5, minmax(185px, 1fr)); gap: 13px; overflow-x: auto; padding-bottom: 12px; }
 .round { min-height: 430px; border: 1px solid var(--line); border-radius: 18px; background: rgba(13,29,24,.72); }
 .round-head { display: flex; justify-content: space-between; padding: 17px; border-bottom: 1px solid var(--line); }
@@ -273,13 +293,19 @@ footer { display: flex; justify-content: space-between; padding: 25px 0 40px; bo
   .pot-card { grid-template-columns: 1fr; }
   .pot-total { border-right: 0; border-bottom: 1px solid var(--line); }
   .entries-grid { grid-template-columns: repeat(2, 1fr); }
+  .qualifier-grid { grid-template-columns: repeat(2, 1fr); }
+  .qualifier:nth-child(odd) { border-right: 1px solid var(--line); }
+  .qualifier:nth-child(even) { border-right: 0; }
+  .qualifier:nth-last-child(-n+4) { border-bottom: 1px solid var(--line); }
+  .qualifier:nth-last-child(-n+2) { border-bottom: 0; }
 }
 
 @media (max-width: 650px) {
   .site-header, main, footer { width: min(100% - 28px, 1180px); }
   .site-header { height: 78px; }
   .hero { padding: 64px 0 68px; }
-  h1 { font-size: clamp(50px, 17vw, 80px); }
+  .hero::after { display: none; }
+  h1 { font-size: clamp(48px, 15vw, 70px); }
   .hero-copy { font-size: 15px; }
   .hero-actions { align-items: stretch; flex-direction: column; }
   .prizes { grid-template-columns: repeat(2, 1fr); }
@@ -288,6 +314,11 @@ footer { display: flex; justify-content: space-between; padding: 25px 0 40px; bo
   .board { padding-top: 75px; }
   .board-heading { align-items: flex-start; flex-direction: column; gap: 22px; }
   .entries-grid { grid-template-columns: 1fr; }
+  .qualifier-heading { align-items: flex-start; padding: 24px 20px 20px; }
+  .qualifier-heading > strong { font-size: 36px; }
+  .qualifier-grid { grid-template-columns: 1fr; }
+  .qualifier { border-right: 0 !important; border-bottom: 1px solid var(--line) !important; }
+  .qualifier:last-child { border-bottom: 0 !important; }
   .modal { padding: 28px 20px 22px; }
 }
 

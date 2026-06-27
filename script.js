@@ -1,4 +1,4 @@
-import { applyResults, roundOf32Teams, shuffle } from "./logic.js";
+import { applyResults, qualifiedTeams, roundOf32Teams, shuffle } from "./logic.js";
 
 const players = [
   "Nabil", "Stephanie", "Dave", "Kristin", "Dominick", "Ben", "Matthew W", "Kevin",
@@ -18,6 +18,8 @@ const syncKey = "the32-last-sync";
 const espnUrl = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=2026&limit=200";
 let entries = JSON.parse(localStorage.getItem(storageKey) || "null") ||
   players.map((player, index) => ({ number: index + 1, player, team: "", stage: "R32" }));
+let qualifiers = [];
+let qualifiersLoaded = false;
 
 const $ = (selector) => document.querySelector(selector);
 const drawn = () => entries.every((entry) => entry.team);
@@ -37,21 +39,36 @@ function card(entry) {
 function render() {
   const hasDrawn = drawn();
   $("#drawButton").hidden = hasDrawn;
+  $("#drawButton").disabled = !hasDrawn && qualifiers.length !== 32;
+  $("#drawButton span").textContent = qualifiers.length === 32
+    ? "Run the draw"
+    : qualifiersLoaded ? "Draw unlocks when all 32 are in" : "Checking qualified teams…";
   $("#updateButton").disabled = !hasDrawn;
   $("#manualButton").disabled = !hasDrawn;
   const lastSync = localStorage.getItem(syncKey);
   $("#drawNote").textContent = hasDrawn
     ? `Draw complete · ${lastSync ? `ESPN synced ${new Date(lastSync).toLocaleString()}` : "ready to sync with ESPN"}`
-    : "One draw. 32 teams. No do-overs.";
+    : `${qualifiers.length} of 32 teams locked in · no draw until the field is complete.`;
   $(".live-pill").innerHTML = `<span></span> ${hasDrawn ? "Tournament live" : "Draw pending"}`;
   $(".live-pill span").style.background = hasDrawn ? "var(--lime)" : "#ffbe41";
 
   $("#entriesView").innerHTML = `<div class="entries-grid">${entries.map(card).join("")}</div>`;
   if (!hasDrawn) {
-    $("#bracketView").innerHTML = `<div class="empty-board"><div>
-      <span class="empty-icon">⌁</span><h3>The bracket is waiting</h3>
-      <p>Once all 32 knockout teams qualify, run the draw to reveal every friend’s team here.</p>
-    </div></div>`;
+    $("#bracketView").innerHTML = `<div class="qualifier-board">
+      <div class="qualifier-heading">
+        <div><p class="eyebrow">THE FIELD IS TAKING SHAPE</p>
+          <h3>${qualifiers.length ? `${qualifiers.length} teams are in` : "Waiting for the first tickets"}</h3>
+          <p>${32 - qualifiers.length} spots remain before the draw.</p>
+        </div>
+        <strong>${qualifiers.length}<span>/32</span></strong>
+      </div>
+      <div class="qualifier-progress"><span style="width:${qualifiers.length / 32 * 100}%"></span></div>
+      <div class="qualifier-grid">${qualifiers.map((team, index) =>
+        `<div class="qualifier"><span>${String(index + 1).padStart(2, "0")}</span><b>${escapeHtml(team)}</b><i>✓</i></div>`
+      ).join("")}${Array.from({ length: 32 - qualifiers.length }, (_, index) =>
+        `<div class="qualifier pending"><span>${String(qualifiers.length + index + 1).padStart(2, "0")}</span><b>Still up for grabs</b></div>`
+      ).join("")}</div>
+    </div>`;
     return;
   }
 
@@ -82,7 +99,9 @@ $("#drawButton").addEventListener("click", async () => {
   try {
     const response = await fetch(espnUrl);
     if (!response.ok) throw new Error(`ESPN returned ${response.status}`);
-    const teams = roundOf32Teams((await response.json()).events || []);
+    const events = (await response.json()).events || [];
+    qualifiers = qualifiedTeams(events);
+    const teams = roundOf32Teams(events);
     if (!teams.length) {
       toast("The Round of 32 is not fully set yet · try again later");
       return;
@@ -96,8 +115,8 @@ $("#drawButton").addEventListener("click", async () => {
     console.error(error);
     toast("Could not fetch ESPN teams · try again later");
   } finally {
-    button.querySelector("span").textContent = "Fetch teams & run the draw";
-    button.disabled = false;
+    qualifiersLoaded = true;
+    render();
   }
 });
 
@@ -159,3 +178,18 @@ document.querySelectorAll(".tab").forEach((tab) => tab.addEventListener("click",
 }));
 
 render();
+fetch(espnUrl)
+  .then((response) => {
+    if (!response.ok) throw new Error(`ESPN returned ${response.status}`);
+    return response.json();
+  })
+  .then((data) => {
+    qualifiers = qualifiedTeams(data.events || []);
+    qualifiersLoaded = true;
+    render();
+  })
+  .catch((error) => {
+    qualifiersLoaded = true;
+    render();
+    console.error("Could not load qualified teams", error);
+  });

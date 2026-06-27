@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { applyResults, normalizeTeam, roundOf32Teams, shuffle } from "./logic.js";
+import { applyResults, normalizeTeam, qualifiedTeams, roundOf32Teams, shuffle } from "./logic.js";
 
 const teams = Array.from({ length: 32 }, (_, index) => `Team ${index + 1}`);
 assert.deepEqual(shuffle(teams).toSorted(), teams.toSorted());
@@ -15,6 +15,7 @@ const roundOf32 = Array.from({ length: 16 }, (_, match) => ({
 }));
 assert.equal(roundOf32Teams(roundOf32).length, 32);
 roundOf32[0].competitions[0].competitors[0].team.isActive = false;
+assert.equal(qualifiedTeams(roundOf32).length, 31);
 assert.deepEqual(roundOf32Teams(roundOf32), []);
 
 const result = applyResults(
