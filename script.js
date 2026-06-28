@@ -19,7 +19,6 @@ const stageRank = ["CHAMPION", "RUNNER_UP", "THIRD", "FOURTH", "FINAL", "SF", "Q
 const storageKey = "the32-pool";
 const syncKey = "the32-last-sync";
 const espnUrl = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=2026&limit=200";
-const demoRound = location.hash.slice(1);
 const localEntries = JSON.parse(localStorage.getItem(storageKey) || "null");
 let entries = players.map((player, index) => ({ number: index + 1, player, team: "", stage: "R32" }));
 let qualifiers = [];
@@ -101,23 +100,18 @@ function fullBracket() {
       : `<i aria-hidden="true">•</i>`}
     <span><b>${escapeHtml(entry.team)}</b><small>#${String(entry.number).padStart(2, "0")} ${escapeHtml(entry.player)}</small></span>
   </span>`;
-  const demoRank = { r16: 1, qf: 2, sf: 3, final: 4 }[demoRound] || 0;
-  const roundRank = { "round-of-16": 1, quarterfinals: 2, semifinals: 3, "3rd-place-match": 4, final: 4 };
-  const shownSide = (side, stage) => demoRank >= (roundRank[stage] || Infinity) && side.candidates.length
-    ? { candidates: [side.candidates[0]] } : side;
   const slot = ({ candidates }) => candidates.length === 1 ? team(candidates[0])
     : `<span class="tree-waiting" aria-label="Matchup to be determined"></span>`;
   const match = (item) => `<article class="tree-match" data-match="${item.stage}-${item.number}">
     <header><b>Match ${item.number}</b><span>${formatBracketKickoff(item.date)}</span></header>
-    ${item.sides.map((side) => `<div class="tree-slot">${slot(shownSide(side, item.stage))}</div>`).join("")}
+    ${item.sides.map((side) => `<div class="tree-slot">${slot(side)}</div>`).join("")}
   </article>`;
   const column = (label, items, side, level) => `<section class="tree-column ${side} level-${level}">
     <h3>${label}</h3>${items.map(match).join("")}
   </section>`;
   const final = rounds.find(({ stage }) => stage === "final")?.matches[0];
   const third = rounds.find(({ stage }) => stage === "3rd-place-match")?.matches[0];
-  const champion = entries.find(({ stage }) => stage === "CHAMPION")
-    || (demoRank === 4 ? final?.sides[0].candidates[0] : null);
+  const champion = entries.find(({ stage }) => stage === "CHAMPION");
   const key = (item) => `${item.stage}-${item.number}`;
   bracketEdges = halves.flatMap((half) => [
     ...half.roundOf32.map((item, index) => [key(item), key(half.roundOf16[Math.floor(index / 2)])]),
