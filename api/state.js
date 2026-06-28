@@ -14,6 +14,11 @@ export function validEntries(entries) {
     );
 }
 
+export function sameDraw(current, proposed) {
+  const assignments = new Map(current.map(({ number, player, team }) => [number, `${player}\0${team}`]));
+  return proposed.every(({ number, player, team }) => assignments.get(number) === `${player}\0${team}`);
+}
+
 export default async function handler(request, response) {
   response.setHeader("Cache-Control", "no-store");
   const redis = getRedis();
@@ -26,6 +31,21 @@ export default async function handler(request, response) {
   if (!sameOrigin(request)) return response.status(403).json({ error: "Invalid request origin" });
   if (!validEntries(request.body?.entries)) return response.status(400).json({ error: "Invalid pool state" });
 
-  await redis.set("wcbracket:entries", request.body.entries);
+  const key = "wcbracket:entries";
+  const proposed = request.body.entries;
+  const current = await redis.get(key);
+  if (!current) {
+    if (proposed.some(({ team }) => !team) || new Set(proposed.map(({ team }) => team)).size !== 32) {
+      return response.status(400).json({ error: "All 32 unique teams must be set before the draw" });
+    }
+    if (await redis.set(key, proposed, { nx: true })) return response.json({ saved: true });
+    return response.status(409).json({ error: "The draw was already completed" });
+  }
+
+  if (!sameDraw(current, proposed)) {
+    return response.status(409).json({ error: "The draw is locked and cannot be replaced" });
+  }
+
+  await redis.set(key, proposed);
   return response.json({ saved: true });
 }

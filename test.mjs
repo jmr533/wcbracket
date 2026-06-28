@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { applyResults, knockoutMatches, normalizeTeam, qualifiedTeams, roundOf32Teams, shuffle } from "./logic.js";
 import { isAdmin, sameOrigin, sessionCookie, validPassword } from "./api/_auth.js";
-import { validEntries } from "./api/state.js";
+import { sameDraw, validEntries } from "./api/state.js";
 
 process.env.ADMIN_PASSWORD = "test-password";
 assert.equal(validPassword("test-password"), true);
@@ -67,4 +67,7 @@ const validState = Array.from({ length: 32 }, (_, index) => ({
 assert.equal(validEntries(validState), true);
 assert.equal(validEntries(validState.map((entry, index) => ({ ...entry, number: index ? entry.number : 2 }))), false);
 assert.equal(validEntries(validState.map((entry, index) => ({ ...entry, stage: index ? entry.stage : "HACKED" }))), false);
+const completedDraw = validState.map((entry, index) => ({ ...entry, team: `Team ${index + 1}` }));
+assert.equal(sameDraw(completedDraw, completedDraw.map((entry) => ({ ...entry, stage: "R16" }))), true);
+assert.equal(sameDraw(completedDraw, completedDraw.map((entry, index) => index ? entry : { ...entry, team: "Another team" })), false);
 console.log("Draw logic passed");

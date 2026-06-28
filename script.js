@@ -26,14 +26,23 @@ let isAdmin = false;
 const $ = (selector) => document.querySelector(selector);
 const drawn = () => entries.every((entry) => entry.team);
 const save = async () => {
+  if (isAdmin) {
+    const response = await fetch("/api/state", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ entries })
+    });
+    if (!response.ok) throw new Error((await response.json()).error || "Could not save shared state");
+  }
   localStorage.setItem(storageKey, JSON.stringify(entries));
-  if (!isAdmin) return;
-  const response = await fetch("/api/state", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ entries })
-  });
-  if (!response.ok) throw new Error((await response.json()).error || "Could not save shared state");
+};
+const loadSharedEntries = async () => {
+  const response = await fetch("/api/state");
+  if (!response.ok) return;
+  const state = await response.json();
+  if (!state.entries) return;
+  entries = tournamentEvents.length ? applyResults(state.entries, tournamentEvents).entries : state.entries;
+  localStorage.setItem(storageKey, JSON.stringify(entries));
 };
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
@@ -197,7 +206,8 @@ $("#drawButton").addEventListener("click", async () => {
     toast("ESPN teams fetched · the draw is complete");
   } catch (error) {
     console.error(error);
-    toast("Could not fetch ESPN teams · try again later");
+    await loadSharedEntries();
+    toast(error.message || "Could not run the draw");
   } finally {
     qualifiersLoaded = true;
     render();
