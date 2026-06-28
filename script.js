@@ -53,6 +53,9 @@ const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => (
 const formatKickoff = (date) => new Intl.DateTimeFormat([], {
   weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
 }).format(new Date(date));
+const formatBracketKickoff = (date) => new Intl.DateTimeFormat([], {
+  month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
+}).format(new Date(date));
 const sameDay = (left, right) => left.getFullYear() === right.getFullYear() &&
   left.getMonth() === right.getMonth() && left.getDate() === right.getDate();
 
@@ -107,7 +110,7 @@ function renderPaths() {
   const slot = ({ candidates }) => candidates.length === 1 ? team(candidates[0])
     : `<span class="tree-waiting" aria-label="Matchup to be determined"></span>`;
   const match = (item) => `<article class="tree-match">
-    <header><b>Match ${item.number}</b><span>${formatKickoff(item.date)}</span></header>
+    <header><b>Match ${item.number}</b><span>${formatBracketKickoff(item.date)}</span></header>
     ${item.sides.map((side) => `<div class="tree-slot">${slot(side)}</div>`).join("")}
   </article>`;
   const column = (label, items, side, level) => `<section class="tree-column ${side} level-${level}">

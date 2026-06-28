@@ -274,33 +274,11 @@ h2 { margin: 0; font-size: clamp(28px, 4vw, 42px); letter-spacing: -.05em; }
   border-radius: 20px;
   background: radial-gradient(circle at 50% 42%, rgba(201,255,87,.08), transparent 28%), rgba(8,23,18,.7);
 }
-.tree-column { display: flex; position: relative; min-width: 0; flex-direction: column; justify-content: space-around; }
-.tree-column h3 { position: absolute; top: -2px; width: 100%; margin: 0; color: var(--muted); font-size: 9px; letter-spacing: .12em; text-align: center; text-transform: uppercase; }
+.tree-column { display: flex; position: relative; min-width: 0; flex-direction: column; justify-content: space-around; padding-top: 28px; }
+.tree-column h3 { position: absolute; top: 5px; width: 100%; margin: 0; color: var(--muted); font-size: 9px; letter-spacing: .12em; text-align: center; text-transform: uppercase; }
 .tree-match { position: relative; border: 1px solid rgba(201,255,87,.28); border-radius: 10px; background: #10231d; box-shadow: 0 10px 26px rgba(0,0,0,.16); }
-.tree-column.left .tree-match::after, .tree-column.right .tree-match::before {
-  content: ""; position: absolute; top: 50%; width: 11px; border-top: 1px solid rgba(201,255,87,.45);
-}
-.tree-column.left .tree-match::after { left: 100%; }
-.tree-column.right .tree-match::before { right: 100%; }
-.tree-column.level-1 { --connector: 120px; }
-.tree-column.level-2 { --connector: 240px; }
-.tree-column.level-3 { --connector: 480px; }
-.tree-column.left:not(.level-0) .tree-match::before,
-.tree-column.right:not(.level-0) .tree-match::after {
-  content: ""; position: absolute; top: calc(50% - var(--connector) / 2); width: 11px; height: var(--connector);
-}
-.tree-column.left:not(.level-0) .tree-match::before {
-  right: 100%;
-  background: linear-gradient(rgba(201,255,87,.45), rgba(201,255,87,.45)) left/1px 100% no-repeat,
-    linear-gradient(rgba(201,255,87,.45), rgba(201,255,87,.45)) center/100% 1px no-repeat;
-}
-.tree-column.right:not(.level-0) .tree-match::after {
-  left: 100%;
-  background: linear-gradient(rgba(201,255,87,.45), rgba(201,255,87,.45)) right/1px 100% no-repeat,
-    linear-gradient(rgba(201,255,87,.45), rgba(201,255,87,.45)) center/100% 1px no-repeat;
-}
 .tree-match > header { display: flex; justify-content: space-between; gap: 8px; padding: 6px 8px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 7px; text-transform: uppercase; }
-.tree-column:not(.level-0) .tree-match > header span { display: none; }
+.tree-column:not(.level-0) .tree-match > header { align-items: flex-start; flex-direction: column; gap: 2px; }
 .tree-slot { min-height: 43px; display: grid; align-items: center; padding: 5px 7px; }
 .tree-slot + .tree-slot { border-top: 1px solid var(--line); }
 .tree-team { display: flex; min-width: 0; align-items: center; gap: 7px; }
