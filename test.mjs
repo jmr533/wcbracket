@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
-import { applyResults, knockoutMatches, normalizeTeam, qualifiedTeams, roundOf32Teams, shuffle } from "./logic.js";
+import {
+  applyResults, bracketHalves, bracketPossibilities, knockoutMatches, normalizeTeam,
+  qualifiedTeams, roundOf32Teams, shuffle
+} from "./logic.js";
 import { isAdmin, sameOrigin, sessionCookie, validPassword } from "./api/_auth.js";
 import { sameDraw, validEntries } from "./api/state.js";
 
@@ -60,6 +63,54 @@ assert.deepEqual(knockoutMatches(result.entries, [{
     ]
   }]
 }])[0].sides.map(({ entry, winner }) => [entry.player, winner]), [["Nabil", true], ["Stephanie", false]]);
+
+const pathEvents = [
+  ...roundOf32,
+  {
+    date: "2026-07-04T17:00Z",
+    season: { slug: "round-of-16" },
+    competitions: [{
+      competitors: ["Round of 32 1 Winner", "Round of 32 2 Winner"].map((displayName) => ({
+        team: { displayName, isActive: false }
+      }))
+    }]
+  }
+];
+roundOf32[0].competitions[0].competitors[0].team.isActive = true;
+const pathEntries = teams.map((team, index) => ({
+  number: index + 1, player: `Player ${index + 1}`, team, stage: "R32"
+}));
+assert.deepEqual(
+  bracketPossibilities(pathEntries, pathEvents)[1].matches[0].sides.map(({ candidates }) =>
+    candidates.map(({ number }) => number)
+  ),
+  [[1, 2], [3, 4]]
+);
+roundOf32[0].competitions[0].status = { type: { completed: true } };
+roundOf32[0].competitions[0].competitors[0].winner = true;
+roundOf32[0].competitions[0].competitors[1].winner = false;
+assert.deepEqual(
+  bracketPossibilities(pathEntries, pathEvents)[1].matches[0].sides[0].candidates.map(({ number }) => number),
+  [1]
+);
+const candidate = (...numbers) => ({ candidates: numbers.map((number) => ({ number })) });
+const bracketRounds = [
+  ["round-of-32", Array.from({ length: 8 }, (_, index) => ({
+    number: index + 1, sides: [candidate(index * 2 + 1), candidate(index * 2 + 2)]
+  }))],
+  ["round-of-16", [
+    { number: 2, sides: [candidate(5, 6), candidate(7, 8)] },
+    { number: 1, sides: [candidate(1, 2), candidate(3, 4)] },
+    { number: 4, sides: [candidate(13, 14), candidate(15, 16)] },
+    { number: 3, sides: [candidate(9, 10), candidate(11, 12)] }
+  ]],
+  ["quarterfinals", [
+    { number: 2, sides: [candidate(9, 10, 11, 12), candidate(13, 14, 15, 16)] },
+    { number: 1, sides: [candidate(1, 2, 3, 4), candidate(5, 6, 7, 8)] }
+  ]],
+  ["semifinals", [{ number: 1, sides: [candidate(1, 2, 3, 4, 5, 6, 7, 8), candidate(9, 10, 11, 12, 13, 14, 15, 16)] }]]
+].map(([stage, matches]) => ({ stage, matches }));
+assert.deepEqual(bracketHalves(bracketRounds)[0].roundOf32.map(({ number }) => number), [1, 2, 3, 4, 5, 6, 7, 8]);
 
 const validState = Array.from({ length: 32 }, (_, index) => ({
   number: index + 1, player: `Player ${index + 1}`, team: "", stage: "R32"
