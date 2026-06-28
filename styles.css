@@ -260,7 +260,6 @@ h2 { margin: 0; font-size: clamp(28px, 4vw, 42px); letter-spacing: -.05em; }
 .round-list { display: grid; gap: 8px; padding: 10px; }
 
 .full-bracket { width: min(1600px, calc(100vw - 28px)); margin-left: 50%; transform: translateX(-50%); }
-.paths-note { margin: 0 0 16px; color: var(--muted); font-size: 12px; }
 .knockout-scroll { overflow-x: auto; padding: 8px 0 18px; }
 .knockout-tree {
   display: grid;

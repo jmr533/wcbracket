@@ -119,9 +119,7 @@ function fullBracket() {
     ...half.quarterfinals.map((item) => [key(item), key(half.semifinal)]),
     [key(half.semifinal), key(final)]
   ]);
-  return `<div class="full-bracket">
-  <p class="paths-note">The two sides meet in the middle. Results narrow each path automatically.</p>
-  <div class="knockout-scroll"><div class="knockout-tree">
+  return `<div class="full-bracket"><div class="knockout-scroll"><div class="knockout-tree">
     <svg class="tree-connectors" id="bracketConnectors" aria-hidden="true"></svg>
     ${column("Round of 32", halves[0].roundOf32, "left", 0)}
     ${column("Round of 16", halves[0].roundOf16, "left", 1)}
