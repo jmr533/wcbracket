@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { applyResults, knockoutMatches, normalizeTeam, qualifiedTeams, roundOf32Teams, shuffle } from "./logic.js";
+import { applyResults, bracketPossibilities, knockoutMatches, normalizeTeam, qualifiedTeams, roundOf32Teams, shuffle } from "./logic.js";
 import { isAdmin, sameOrigin, sessionCookie, validPassword } from "./api/_auth.js";
 import { sameDraw, validEntries } from "./api/state.js";
 
@@ -60,6 +60,36 @@ assert.deepEqual(knockoutMatches(result.entries, [{
     ]
   }]
 }])[0].sides.map(({ entry, winner }) => [entry.player, winner]), [["Nabil", true], ["Stephanie", false]]);
+
+const pathEvents = [
+  ...roundOf32,
+  {
+    date: "2026-07-04T17:00Z",
+    season: { slug: "round-of-16" },
+    competitions: [{
+      competitors: ["Round of 32 1 Winner", "Round of 32 2 Winner"].map((displayName) => ({
+        team: { displayName, isActive: false }
+      }))
+    }]
+  }
+];
+roundOf32[0].competitions[0].competitors[0].team.isActive = true;
+const pathEntries = teams.map((team, index) => ({
+  number: index + 1, player: `Player ${index + 1}`, team, stage: "R32"
+}));
+assert.deepEqual(
+  bracketPossibilities(pathEntries, pathEvents)[1].matches[0].sides.map(({ candidates }) =>
+    candidates.map(({ number }) => number)
+  ),
+  [[1, 2], [3, 4]]
+);
+roundOf32[0].competitions[0].status = { type: { completed: true } };
+roundOf32[0].competitions[0].competitors[0].winner = true;
+roundOf32[0].competitions[0].competitors[1].winner = false;
+assert.deepEqual(
+  bracketPossibilities(pathEntries, pathEvents)[1].matches[0].sides[0].candidates.map(({ number }) => number),
+  [1]
+);
 
 const validState = Array.from({ length: 32 }, (_, index) => ({
   number: index + 1, player: `Player ${index + 1}`, team: "", stage: "R32"

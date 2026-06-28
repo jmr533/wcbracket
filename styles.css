@@ -259,6 +259,21 @@ h2 { margin: 0; font-size: clamp(28px, 4vw, 42px); letter-spacing: -.05em; }
 .round-head span { color: var(--muted); font-size: 10px; }
 .round-list { display: grid; gap: 8px; padding: 10px; }
 
+.paths-note { margin: 0 0 16px; color: var(--muted); font-size: 12px; }
+.path-rounds { display: grid; grid-auto-flow: column; grid-auto-columns: 290px; gap: 13px; overflow-x: auto; padding-bottom: 12px; }
+.path-round { align-self: start; overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: rgba(13,29,24,.72); }
+.path-list { display: grid; gap: 10px; padding: 10px; }
+.path-match { overflow: hidden; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; background: #10231d; }
+.path-match > header { display: flex; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid var(--line); font-size: 8px; text-transform: uppercase; }
+.path-match > header span { color: var(--muted); }
+.path-slot { display: flex; flex-wrap: wrap; gap: 5px; min-height: 52px; align-content: center; padding: 8px; }
+.path-slot + .path-slot { border-top: 1px solid var(--line); }
+.path-slot > span { min-width: 0; flex: 1 1 120px; padding: 6px 7px; border-radius: 7px; background: rgba(201,255,87,.07); }
+.path-slot b, .path-slot small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.path-slot b { font-size: 9px; }
+.path-slot small { margin-top: 2px; color: var(--muted); font-size: 8px; }
+.path-slot em { margin: auto; color: var(--muted); font-size: 9px; font-style: normal; }
+
 .match-card { overflow: hidden; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; background: #10231d; }
 .match-card.live { border-color: rgba(201,255,87,.45); box-shadow: 0 0 18px rgba(201,255,87,.06); }
 .match-card > header { display: flex; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }

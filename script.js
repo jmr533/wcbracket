@@ -1,4 +1,4 @@
-import { applyResults, knockoutMatches, qualifiedTeams, roundOf32Teams, shuffle } from "./logic.js";
+import { applyResults, bracketPossibilities, knockoutMatches, qualifiedTeams, roundOf32Teams, shuffle } from "./logic.js";
 
 const players = [
   "Nabil", "Stephanie", "Dave", "Kristin", "Dominick", "Ben", "Matthew W", "Kevin",
@@ -79,6 +79,34 @@ function matchup(match, compact = false) {
   </article>`;
 }
 
+function renderPaths() {
+  if (!drawn()) {
+    $("#pathsView").innerHTML = `<div class="empty-board"><div>
+      <span class="empty-icon">↗</span><h3>The paths appear after the draw</h3>
+      <p>Once every country has an owner, this view will show who can meet in every future round.</p>
+    </div></div>`;
+    return;
+  }
+  const rounds = bracketPossibilities(entries, tournamentEvents);
+  $("#pathsView").innerHTML = rounds.some(({ matches }) => matches.length)
+    ? `<p class="paths-note">Each slot shows everyone who can still reach that match. Results narrow the field automatically.</p>
+      <div class="path-rounds">${rounds.map(({ label, matches }) => `
+        <section class="path-round">
+          <header class="round-head"><b>${label}</b><span>${matches.length} matches</span></header>
+          <div class="path-list">${matches.map((match) => `<article class="path-match">
+            <header><b>Match ${match.number}</b><span>${formatKickoff(match.date)}</span></header>
+            ${match.sides.map(({ candidates }) => `<div class="path-slot">
+              ${candidates.length ? candidates.map((entry) => `<span>
+                <b>#${String(entry.number).padStart(2, "0")} ${escapeHtml(entry.player)}</b>
+                <small>${escapeHtml(entry.team)}</small>
+              </span>`).join("") : "<em>Waiting on the bracket</em>"}
+            </div>`).join("")}
+          </article>`).join("")}</div>
+        </section>`).join("")}</div>`
+    : `<div class="empty-board"><div><h3>Fixture paths coming soon</h3>
+      <p>The full bracket will appear when ESPN publishes the knockout schedule.</p></div></div>`;
+}
+
 function showDrawReveal() {
   const dialog = $("#drawDialog");
   const flags = new Map(qualifiers.map((team) => [team.name, team.flag]));
@@ -134,6 +162,7 @@ function render() {
   $(".live-pill span").style.background = hasDrawn ? "var(--lime)" : "#ffbe41";
 
   $("#entriesView").innerHTML = `<div class="entries-grid">${entries.map(card).join("")}</div>`;
+  renderPaths();
   if (!hasDrawn) {
     $("#bracketView").innerHTML = `<div class="qualifier-board">
       <div class="qualifier-heading">
@@ -309,8 +338,9 @@ document.querySelectorAll(".tab").forEach((tab) => tab.addEventListener("click",
     item.classList.toggle("active", item === tab);
     item.setAttribute("aria-selected", item === tab);
   });
-  $("#bracketView").hidden = tab.dataset.view !== "bracket";
-  $("#entriesView").hidden = tab.dataset.view !== "entries";
+  document.querySelectorAll(".view").forEach((view) => {
+    view.hidden = view.id !== `${tab.dataset.view}View`;
+  });
 }));
 
 render();

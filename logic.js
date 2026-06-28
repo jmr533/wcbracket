@@ -74,6 +74,61 @@ export function knockoutMatches(entries, events) {
   });
 }
 
+export function bracketPossibilities(entries, events) {
+  const rounds = [
+    ["round-of-32", "Round of 32"], ["round-of-16", "Round of 16"],
+    ["quarterfinals", "Quarterfinals"], ["semifinals", "Semifinals"],
+    ["3rd-place-match", "Third place"], ["final", "Final"]
+  ];
+  const sourceStages = {
+    "Round of 32": "round-of-32",
+    "Round of 16": "round-of-16",
+    Quarterfinal: "quarterfinals",
+    Semifinal: "semifinals"
+  };
+  const byStage = Object.fromEntries(rounds.map(([stage]) => [stage, events
+    .filter((event) => event.season?.slug === stage)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+  ]));
+
+  const entryFor = (competitor) => {
+    const team = competitor?.team || {};
+    const names = [team.displayName, team.shortDisplayName, team.name, team.location, team.abbreviation]
+      .map(normalizeTeam);
+    return entries.find((entry) => names.includes(normalizeTeam(entry.team)));
+  };
+  const possibilities = (competitor) => {
+    const entry = entryFor(competitor);
+    if (entry) return entry.stage === "OUT" ? [] : [entry];
+    const reference = competitor?.team?.displayName?.match(
+      /^(Round of 32|Round of 16|Quarterfinal|Semifinal) (\d+) (Winner|Loser)$/
+    );
+    if (!reference) return [];
+    const source = byStage[sourceStages[reference[1]]]?.[Number(reference[2]) - 1];
+    const competition = source?.competitions?.[0];
+    if (!competition) return [];
+    const sides = competition.competitors || [];
+    if (competition.status?.type?.completed) {
+      return possibilities(sides.find((side) => Boolean(side.winner) === (reference[3] === "Winner")));
+    }
+    return sides.flatMap(possibilities);
+  };
+
+  return rounds.map(([stage, label]) => ({
+    stage,
+    label,
+    matches: byStage[stage].map((event, index) => ({
+      number: index + 1,
+      date: event.date,
+      sides: (event.competitions?.[0]?.competitors || []).map((side) => ({
+        candidates: possibilities(side).filter((entry, candidateIndex, candidates) =>
+          candidates.findIndex((candidate) => candidate.number === entry.number) === candidateIndex
+        )
+      }))
+    }))
+  }));
+}
+
 export function applyResults(entries, events) {
   const updated = entries.map((entry) => ({ ...entry }));
   const unmatched = new Set();
