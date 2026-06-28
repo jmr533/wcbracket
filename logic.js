@@ -118,6 +118,7 @@ export function bracketPossibilities(entries, events) {
     stage,
     label,
     matches: byStage[stage].map((event, index) => ({
+      stage,
       number: index + 1,
       date: event.date,
       sides: (event.competitions?.[0]?.competitors || []).map((side) => ({

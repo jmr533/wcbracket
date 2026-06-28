@@ -25,6 +25,7 @@ let qualifiers = [];
 let qualifiersLoaded = false;
 let tournamentEvents = [];
 let isAdmin = false;
+let bracketEdges = [];
 
 const $ = (selector) => document.querySelector(selector);
 const drawn = () => entries.every((entry) => entry.team);
@@ -85,20 +86,12 @@ function matchup(match, compact = false) {
   </article>`;
 }
 
-function renderPaths() {
-  if (!drawn()) {
-    $("#pathsView").innerHTML = `<div class="empty-board"><div>
-      <span class="empty-icon">↗</span><h3>The paths appear after the draw</h3>
-      <p>Once every country has an owner, this view will show who can meet in every future round.</p>
-    </div></div>`;
-    return;
-  }
+function fullBracket() {
   const rounds = bracketPossibilities(entries, tournamentEvents);
   const halves = bracketHalves(rounds);
   if (halves.length !== 2) {
-    $("#pathsView").innerHTML = `<div class="empty-board"><div><h3>Fixture paths coming soon</h3>
+    return `<div class="empty-board"><div><h3>Fixture paths coming soon</h3>
       <p>The full bracket will appear when ESPN publishes the knockout schedule.</p></div></div>`;
-    return;
   }
   const flags = new Map(qualifiers.map(({ name, flag }) => [normalizeTeam(name), flag]));
   const team = (entry) => `<span class="tree-team">
@@ -109,7 +102,7 @@ function renderPaths() {
   </span>`;
   const slot = ({ candidates }) => candidates.length === 1 ? team(candidates[0])
     : `<span class="tree-waiting" aria-label="Matchup to be determined"></span>`;
-  const match = (item) => `<article class="tree-match">
+  const match = (item) => `<article class="tree-match" data-match="${item.stage}-${item.number}">
     <header><b>Match ${item.number}</b><span>${formatBracketKickoff(item.date)}</span></header>
     ${item.sides.map((side) => `<div class="tree-slot">${slot(side)}</div>`).join("")}
   </article>`;
@@ -119,8 +112,17 @@ function renderPaths() {
   const final = rounds.find(({ stage }) => stage === "final")?.matches[0];
   const third = rounds.find(({ stage }) => stage === "3rd-place-match")?.matches[0];
   const champion = entries.find(({ stage }) => stage === "CHAMPION");
-  $("#pathsView").innerHTML = `<p class="paths-note">The two sides meet in the middle. Results narrow each path automatically.</p>
+  const key = (item) => `${item.stage}-${item.number}`;
+  bracketEdges = halves.flatMap((half) => [
+    ...half.roundOf32.map((item, index) => [key(item), key(half.roundOf16[Math.floor(index / 2)])]),
+    ...half.roundOf16.map((item, index) => [key(item), key(half.quarterfinals[Math.floor(index / 2)])]),
+    ...half.quarterfinals.map((item) => [key(item), key(half.semifinal)]),
+    [key(half.semifinal), key(final)]
+  ]);
+  return `<div class="full-bracket">
+  <p class="paths-note">The two sides meet in the middle. Results narrow each path automatically.</p>
   <div class="knockout-scroll"><div class="knockout-tree">
+    <svg class="tree-connectors" id="bracketConnectors" aria-hidden="true"></svg>
     ${column("Round of 32", halves[0].roundOf32, "left", 0)}
     ${column("Round of 16", halves[0].roundOf16, "left", 1)}
     ${column("Quarterfinals", halves[0].quarterfinals, "left", 2)}
@@ -138,7 +140,27 @@ function renderPaths() {
     ${column("Quarterfinals", halves[1].quarterfinals, "right", 2)}
     ${column("Round of 16", halves[1].roundOf16, "right", 1)}
     ${column("Round of 32", halves[1].roundOf32, "right", 0)}
-  </div></div>`;
+  </div></div></div>`;
+}
+
+function drawBracketConnectors() {
+  const svg = $("#bracketConnectors");
+  const tree = svg?.closest(".knockout-tree");
+  if (!tree) return;
+  const treeBox = tree.getBoundingClientRect();
+  svg.setAttribute("viewBox", `0 0 ${treeBox.width} ${treeBox.height}`);
+  svg.innerHTML = bracketEdges.map(([fromKey, toKey]) => {
+    const from = tree.querySelector(`[data-match="${fromKey}"]`)?.getBoundingClientRect();
+    const to = tree.querySelector(`[data-match="${toKey}"]`)?.getBoundingClientRect();
+    if (!from || !to) return "";
+    const leftToRight = from.left < to.left;
+    const startX = (leftToRight ? from.right : from.left) - treeBox.left;
+    const endX = (leftToRight ? to.left : to.right) - treeBox.left;
+    const startY = from.top + from.height / 2 - treeBox.top;
+    const endY = to.top + to.height / 2 - treeBox.top;
+    const middleX = (startX + endX) / 2;
+    return `<path d="M${startX} ${startY}H${middleX}V${endY}H${endX}"/>`;
+  }).join("");
 }
 
 function showDrawReveal() {
@@ -196,7 +218,6 @@ function render() {
   $(".live-pill span").style.background = hasDrawn ? "var(--lime)" : "#ffbe41";
 
   $("#entriesView").innerHTML = `<div class="entries-grid">${entries.map(card).join("")}</div>`;
-  renderPaths();
   if (!hasDrawn) {
     $("#bracketView").innerHTML = `<div class="qualifier-board">
       <div class="qualifier-heading">
@@ -221,23 +242,13 @@ function render() {
   const featured = today.length ? today : matches.filter((match) =>
     match.state === "pre" && new Date(match.date) > new Date()
   ).slice(0, 2);
-  const rounds = [
-    [["round-of-32"], "Round of 32"], [["round-of-16"], "Round of 16"],
-    [["quarterfinals"], "Quarterfinals"], [["semifinals"], "Semifinals"],
-    [["3rd-place-match", "final"], "Final weekend"]
-  ];
   $("#bracketView").innerHTML = `${featured.length ? `<section class="today">
     <header><div><p class="eyebrow">${today.length ? "TODAY'S MATCHES" : "UP NEXT"}</p>
       <h3>${today.length ? "Something on every match" : "The next battles"}</h3></div>
       <span>${today.length ? `${today.length} today` : formatKickoff(featured[0].date)}</span></header>
     <div>${featured.map((match) => matchup(match, true)).join("")}</div>
-  </section>` : ""}
-  <div class="rounds">${rounds.map(([stages, label]) => {
-    const visible = matches.filter((match) => stages.includes(match.stage));
-    return `<section class="round"><header class="round-head"><b>${label}</b><span>${visible.length} matches</span></header>
-      <div class="round-list">${visible.length ? visible.map((match) => matchup(match)).join("") : `<div class="empty-board"><p>Fixtures coming soon.</p></div>`}</div>
-    </section>`;
-  }).join("")}</div>`;
+  </section>` : ""}${fullBracket()}`;
+  requestAnimationFrame(drawBracketConnectors);
 }
 
 function toast(message) {
@@ -434,3 +445,5 @@ setInterval(async () => {
     console.error("Live refresh failed", error);
   }
 }, 60000);
+
+window.addEventListener("resize", drawBracketConnectors);
