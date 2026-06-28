@@ -93,6 +93,29 @@ assert.deepEqual(
   bracketPossibilities(pathEntries, pathEvents)[1].matches[0].sides[0].candidates.map(({ number }) => number),
   [1]
 );
+
+const officialOrderEvents = [
+  ["760486", "2026-06-28T19:00Z", 1],
+  ["760489", "2026-06-29T20:30Z", 2],
+  ["760487", "2026-06-29T17:00Z", 4],
+  ["760488", "2026-06-30T01:00Z", 3]
+].map(([id, date, team]) => ({
+  id, date, season: { slug: "round-of-32" },
+  competitions: [{ competitors: [{ team: { displayName: `Team ${team}`, isActive: true } }] }]
+}));
+officialOrderEvents.push({
+  id: "760502", date: "2026-07-04T17:00Z", season: { slug: "round-of-16" },
+  competitions: [{ competitors: ["Round of 32 1 Winner", "Round of 32 3 Winner"].map((displayName) => ({
+    team: { displayName, isActive: false }
+  })) }]
+});
+assert.deepEqual(
+  bracketPossibilities(pathEntries, officialOrderEvents)[1].matches[0].sides.map(({ candidates }) =>
+    candidates.map(({ number }) => number)
+  ),
+  [[1], [3]]
+);
+
 const candidate = (...numbers) => ({ candidates: numbers.map((number) => ({ number })) });
 const bracketRounds = [
   ["round-of-32", Array.from({ length: 8 }, (_, index) => ({

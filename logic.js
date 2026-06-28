@@ -74,6 +74,14 @@ export function knockoutMatches(entries, events) {
   });
 }
 
+// ponytail: ESPN omits FIFA match numbers, so use its stable event IDs for this one-off tournament.
+const bracketOrder = new Map([
+  "760486", "760489", "760488", "760487", "760492", "760490", "760491", "760495",
+  "760494", "760493", "760496", "760497", "760498", "760500", "760501", "760499",
+  "760503", "760502", "760504", "760505", "760506", "760507", "760509", "760508",
+  "760510", "760511", "760512", "760513", "760514", "760515", "760516", "760517"
+].map((id, index) => [id, index]));
+
 export function bracketPossibilities(entries, events) {
   const rounds = [
     ["round-of-32", "Round of 32"], ["round-of-16", "Round of 16"],
@@ -88,7 +96,8 @@ export function bracketPossibilities(entries, events) {
   };
   const byStage = Object.fromEntries(rounds.map(([stage]) => [stage, events
     .filter((event) => event.season?.slug === stage)
-    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .sort((a, b) => (bracketOrder.get(a.id) ?? Infinity) - (bracketOrder.get(b.id) ?? Infinity)
+      || new Date(a.date) - new Date(b.date))
   ]));
 
   const entryFor = (competitor) => {
