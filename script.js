@@ -105,14 +105,7 @@ function renderPaths() {
     <span><b>${escapeHtml(entry.team)}</b><small>#${String(entry.number).padStart(2, "0")} ${escapeHtml(entry.player)}</small></span>
   </span>`;
   const slot = ({ candidates }) => candidates.length === 1 ? team(candidates[0])
-    : candidates.length ? `<details class="tree-possibilities">
-      <summary>
-        <span class="flag-stack">${candidates.slice(0, 4).map((entry) => flags.get(normalizeTeam(entry.team))
-          ? `<img src="${escapeHtml(flags.get(normalizeTeam(entry.team)))}" alt="">` : "").join("")}</span>
-        <b>${candidates.length} possibilities</b>
-      </summary>
-      <div>${candidates.map(team).join("")}</div>
-    </details>` : `<span class="tree-waiting">Waiting on winner</span>`;
+    : `<span class="tree-waiting" aria-label="Matchup to be determined"></span>`;
   const match = (item) => `<article class="tree-match">
     <header><b>Match ${item.number}</b><span>${formatKickoff(item.date)}</span></header>
     ${item.sides.map((side) => `<div class="tree-slot">${slot(side)}</div>`).join("")}
@@ -123,9 +116,7 @@ function renderPaths() {
   const final = rounds.find(({ stage }) => stage === "final")?.matches[0];
   const third = rounds.find(({ stage }) => stage === "3rd-place-match")?.matches[0];
   const champion = entries.find(({ stage }) => stage === "CHAMPION");
-  $("#pathsView").innerHTML = `<p class="paths-note">
-    The two sides meet in the middle. Open any future slot to see every possible player and country.
-  </p>
+  $("#pathsView").innerHTML = `<p class="paths-note">The two sides meet in the middle. Results narrow each path automatically.</p>
   <div class="knockout-scroll"><div class="knockout-tree">
     ${column("Round of 32", halves[0].roundOf32, "left", 0)}
     ${column("Round of 16", halves[0].roundOf16, "left", 1)}

@@ -310,15 +310,7 @@ h2 { margin: 0; font-size: clamp(28px, 4vw, 42px); letter-spacing: -.05em; }
 .tree-team b, .tree-team small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tree-team b { font-size: 9px; }
 .tree-team small { margin-top: 2px; color: var(--muted); font-size: 7px; }
-.tree-possibilities summary { display: flex; align-items: center; gap: 7px; color: var(--paper); cursor: pointer; font-size: 8px; list-style: none; }
-.tree-possibilities summary::-webkit-details-marker { display: none; }
-.tree-possibilities summary::after { content: "+"; margin-left: auto; color: var(--lime); font-size: 13px; }
-.tree-possibilities[open] summary::after { content: "−"; }
-.tree-possibilities > div { display: grid; gap: 4px; max-height: 230px; overflow-y: auto; margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--line); }
-.tree-possibilities > div .tree-team { padding: 4px; border-radius: 6px; background: rgba(201,255,87,.05); }
-.flag-stack { display: flex; }
-.flag-stack img { width: 18px; height: 18px; margin-right: -6px; border: 1px solid #10231d; border-radius: 50%; background: #10231d; object-fit: contain; }
-.tree-waiting { color: var(--muted); font-size: 8px; }
+.tree-waiting { min-height: 24px; }
 .tree-center { display: flex; flex-direction: column; justify-content: center; gap: 16px; }
 .tree-center .eyebrow { margin: 0; text-align: center; }
 .tree-center .tree-match { border-color: rgba(201,255,87,.55); }
