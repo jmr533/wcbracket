@@ -1,5 +1,16 @@
 import assert from "node:assert/strict";
 import { applyResults, knockoutMatches, normalizeTeam, qualifiedTeams, roundOf32Teams, shuffle } from "./logic.js";
+import { isAdmin, sameOrigin, sessionCookie, validPassword } from "./api/_auth.js";
+import { validEntries } from "./api/state.js";
+
+process.env.ADMIN_PASSWORD = "test-password";
+assert.equal(validPassword("test-password"), true);
+assert.equal(validPassword("wrong-password"), false);
+const cookie = sessionCookie();
+assert.equal(isAdmin({ headers: { cookie } }), true);
+assert.equal(isAdmin({ headers: { cookie: "wcbracket_admin=wrong" } }), false);
+assert.equal(sameOrigin({ headers: { origin: "https://pool.example", host: "pool.example" } }), true);
+assert.equal(sameOrigin({ headers: { origin: "https://evil.example", host: "pool.example" } }), false);
 
 const teams = Array.from({ length: 32 }, (_, index) => `Team ${index + 1}`);
 assert.deepEqual(shuffle(teams).toSorted(), teams.toSorted());
@@ -49,4 +60,11 @@ assert.deepEqual(knockoutMatches(result.entries, [{
     ]
   }]
 }])[0].sides.map(({ entry, winner }) => [entry.player, winner]), [["Nabil", true], ["Stephanie", false]]);
+
+const validState = Array.from({ length: 32 }, (_, index) => ({
+  number: index + 1, player: `Player ${index + 1}`, team: "", stage: "R32"
+}));
+assert.equal(validEntries(validState), true);
+assert.equal(validEntries(validState.map((entry, index) => ({ ...entry, number: index ? entry.number : 2 }))), false);
+assert.equal(validEntries(validState.map((entry, index) => ({ ...entry, stage: index ? entry.stage : "HACKED" }))), false);
 console.log("Draw logic passed");

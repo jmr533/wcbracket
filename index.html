@@ -30,13 +30,13 @@
           bracket, survive each round, and claim the pot.
         </p>
         <div class="hero-actions">
-          <button class="button button-primary" id="drawButton">
+          <button class="button button-primary" id="drawButton" hidden>
             <span>Fetch teams & run the draw</span><b>→</b>
           </button>
           <button class="button button-secondary" id="updateButton" disabled>
             Sync ESPN results
           </button>
-          <button class="button button-quiet" id="manualButton" disabled>
+          <button class="button button-quiet" id="manualButton" disabled hidden>
             Manual edit
           </button>
         </div>
@@ -104,6 +104,20 @@
           <option value="OUT">Eliminated</option>
         </select>
         <button class="button button-primary wide" value="default">Save standing <b>→</b></button>
+        <button class="button button-quiet wide" type="button" id="logoutButton">Sign out of admin</button>
+      </form>
+    </dialog>
+
+    <dialog id="loginDialog">
+      <form class="modal" id="loginForm">
+        <button class="modal-close" type="button" aria-label="Close">×</button>
+        <p class="eyebrow">PRIVATE ACCESS</p>
+        <h2>Admin login</h2>
+        <p>The editor is hidden from everyone else.</p>
+        <label for="adminPassword">Password</label>
+        <input id="adminPassword" type="password" autocomplete="current-password" required />
+        <p class="form-error" id="loginError" role="alert"></p>
+        <button class="button button-primary wide" type="submit">Unlock editor <b>→</b></button>
       </form>
     </dialog>
 

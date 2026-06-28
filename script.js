@@ -16,15 +16,25 @@ const stageRank = ["CHAMPION", "RUNNER_UP", "THIRD", "FOURTH", "FINAL", "SF", "Q
 const storageKey = "the32-pool";
 const syncKey = "the32-last-sync";
 const espnUrl = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=2026&limit=200";
-let entries = JSON.parse(localStorage.getItem(storageKey) || "null") ||
-  players.map((player, index) => ({ number: index + 1, player, team: "", stage: "R32" }));
+const localEntries = JSON.parse(localStorage.getItem(storageKey) || "null");
+let entries = players.map((player, index) => ({ number: index + 1, player, team: "", stage: "R32" }));
 let qualifiers = [];
 let qualifiersLoaded = false;
 let tournamentEvents = [];
+let isAdmin = false;
 
 const $ = (selector) => document.querySelector(selector);
 const drawn = () => entries.every((entry) => entry.team);
-const save = () => localStorage.setItem(storageKey, JSON.stringify(entries));
+const save = async () => {
+  localStorage.setItem(storageKey, JSON.stringify(entries));
+  if (!isAdmin) return;
+  const response = await fetch("/api/state", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ entries })
+  });
+  if (!response.ok) throw new Error((await response.json()).error || "Could not save shared state");
+};
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
 })[character]);
@@ -98,13 +108,15 @@ function showDrawReveal() {
 
 function render() {
   const hasDrawn = drawn();
-  $("#drawButton").hidden = hasDrawn;
+  $("#drawButton").hidden = hasDrawn || !isAdmin;
   $("#drawButton").disabled = !hasDrawn && qualifiers.length !== 32;
   $("#drawButton span").textContent = qualifiers.length === 32
     ? "Run the draw"
     : qualifiersLoaded ? "Draw unlocks when all 32 are in" : "Checking qualified teams…";
   $("#updateButton").disabled = !hasDrawn;
   $("#manualButton").disabled = !hasDrawn;
+  $("#manualButton").hidden = !hasDrawn || !isAdmin;
+  $("#manualButton").textContent = "Admin edit";
   const lastSync = localStorage.getItem(syncKey);
   $("#drawNote").textContent = hasDrawn
     ? `Draw complete · ${lastSync ? `ESPN synced ${new Date(lastSync).toLocaleString()}` : "ready to sync with ESPN"}`
@@ -179,7 +191,7 @@ $("#drawButton").addEventListener("click", async () => {
     }
     const assigned = shuffle(teams);
     entries = entries.map((entry, index) => ({ ...entry, team: assigned[index], stage: "R32" }));
-    save();
+    await save();
     render();
     showDrawReveal();
     toast("ESPN teams fetched · the draw is complete");
@@ -203,7 +215,7 @@ $("#updateButton").addEventListener("click", async () => {
     tournamentEvents = data.events || [];
     const result = applyResults(entries, tournamentEvents);
     entries = result.entries;
-    save();
+    await save();
     localStorage.setItem(syncKey, new Date().toISOString());
     render();
     const warning = result.unmatched.length ? ` · ${result.unmatched.length} unmatched team(s)` : "";
@@ -230,15 +242,56 @@ $("#entrySelect").addEventListener("change", ({ target }) => {
   $("#stageSelect").value = entries.find((entry) => entry.number === Number(target.value)).stage;
 });
 
-$("#updateForm").addEventListener("submit", (event) => {
+$("#updateForm").addEventListener("submit", async (event) => {
   if (event.submitter?.value === "cancel") return;
   event.preventDefault();
   const entry = entries.find((item) => item.number === Number($("#entrySelect").value));
   entry.stage = $("#stageSelect").value;
-  save();
+  try {
+    await save();
+    $("#updateDialog").close();
+    render();
+    toast(`${entry.team} moved to ${stageNames[entry.stage]}`);
+  } catch (error) {
+    console.error(error);
+    toast("Could not save the admin edit");
+  }
+});
+
+$("#loginForm .modal-close").addEventListener("click", () => $("#loginDialog").close());
+
+$("#loginForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = event.submitter;
+  button.disabled = true;
+  $("#loginError").textContent = "";
+  try {
+    const response = await fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: $("#adminPassword").value })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error);
+    isAdmin = true;
+    $("#adminPassword").value = "";
+    $("#loginDialog").close();
+    render();
+    toast("Admin editor unlocked");
+  } catch (error) {
+    $("#loginError").textContent = error.message || "Could not log in";
+  } finally {
+    button.disabled = false;
+  }
+});
+
+$("#logoutButton").addEventListener("click", async () => {
+  await fetch("/api/auth", { method: "DELETE" });
+  isAdmin = false;
   $("#updateDialog").close();
+  history.replaceState({}, "", location.pathname);
   render();
-  toast(`${entry.team} moved to ${stageNames[entry.stage]}`);
+  toast("Signed out");
 });
 
 document.querySelectorAll(".tab").forEach((tab) => tab.addEventListener("click", () => {
@@ -251,6 +304,27 @@ document.querySelectorAll(".tab").forEach((tab) => tab.addEventListener("click",
 }));
 
 render();
+Promise.all([
+  fetch("/api/auth").then((response) => response.ok ? response.json() : { admin: false }),
+  fetch("/api/state").then(async (response) =>
+    response.ok ? { ...await response.json(), available: true } : { entries: null, available: false }
+  )
+]).then(([auth, state]) => {
+  isAdmin = Boolean(auth.admin);
+  if (state.entries) {
+    entries = state.entries;
+    if (tournamentEvents.length) entries = applyResults(entries, tournamentEvents).entries;
+    localStorage.setItem(storageKey, JSON.stringify(entries));
+  } else if (!state.available && localEntries) {
+    entries = localEntries;
+  }
+  render();
+  if (new URLSearchParams(location.search).get("admin") === "1" && !isAdmin) {
+    $("#loginDialog").showModal();
+    $("#adminPassword").focus();
+  }
+}).catch((error) => console.error("Could not load shared pool state", error));
+
 fetch(espnUrl)
   .then((response) => {
     if (!response.ok) throw new Error(`ESPN returned ${response.status}`);
@@ -261,7 +335,7 @@ fetch(espnUrl)
     qualifiers = qualifiedTeams(tournamentEvents);
     if (drawn()) {
       entries = applyResults(entries, tournamentEvents).entries;
-      save();
+      localStorage.setItem(storageKey, JSON.stringify(entries));
     }
     qualifiersLoaded = true;
     render();
@@ -279,7 +353,7 @@ setInterval(async () => {
     if (!response.ok) return;
     tournamentEvents = (await response.json()).events || [];
     entries = applyResults(entries, tournamentEvents).entries;
-    save();
+    localStorage.setItem(storageKey, JSON.stringify(entries));
     localStorage.setItem(syncKey, new Date().toISOString());
     render();
   } catch (error) {

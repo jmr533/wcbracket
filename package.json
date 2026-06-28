@@ -3,5 +3,8 @@
   "type": "module",
   "scripts": {
     "test": "node test.mjs"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.38.0"
   }
 }
