@@ -129,6 +129,21 @@ export function bracketPossibilities(entries, events) {
   }));
 }
 
+export function bracketHalves(rounds) {
+  const matches = Object.fromEntries(rounds.map(({ stage, matches }) => [stage, matches]));
+  const entriesIn = (match) => match?.sides.flatMap(({ candidates }) => candidates.map(({ number }) => number)) || [];
+  const feeders = (stage, sides) => sides.map(({ candidates }) => matches[stage]?.find((match) =>
+    entriesIn(match).some((number) => candidates.some((candidate) => candidate.number === number))
+  )).filter(Boolean);
+
+  return (matches.semifinals || []).map((semifinal) => {
+    const quarterfinals = feeders("quarterfinals", semifinal.sides);
+    const roundOf16 = quarterfinals.flatMap((match) => feeders("round-of-16", match.sides));
+    const roundOf32 = roundOf16.flatMap((match) => feeders("round-of-32", match.sides));
+    return { roundOf32, roundOf16, quarterfinals, semifinal };
+  });
+}
+
 export function applyResults(entries, events) {
   const updated = entries.map((entry) => ({ ...entry }));
   const unmatched = new Set();

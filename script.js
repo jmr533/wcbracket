@@ -1,4 +1,7 @@
-import { applyResults, bracketPossibilities, knockoutMatches, qualifiedTeams, roundOf32Teams, shuffle } from "./logic.js";
+import {
+  applyResults, bracketHalves, bracketPossibilities, knockoutMatches, normalizeTeam,
+  qualifiedTeams, roundOf32Teams, shuffle
+} from "./logic.js";
 
 const players = [
   "Nabil", "Stephanie", "Dave", "Kristin", "Dominick", "Ben", "Matthew W", "Kevin",
@@ -88,23 +91,60 @@ function renderPaths() {
     return;
   }
   const rounds = bracketPossibilities(entries, tournamentEvents);
-  $("#pathsView").innerHTML = rounds.some(({ matches }) => matches.length)
-    ? `<p class="paths-note">Each slot shows everyone who can still reach that match. Results narrow the field automatically.</p>
-      <div class="path-rounds">${rounds.map(({ label, matches }) => `
-        <section class="path-round">
-          <header class="round-head"><b>${label}</b><span>${matches.length} matches</span></header>
-          <div class="path-list">${matches.map((match) => `<article class="path-match">
-            <header><b>Match ${match.number}</b><span>${formatKickoff(match.date)}</span></header>
-            ${match.sides.map(({ candidates }) => `<div class="path-slot">
-              ${candidates.length ? candidates.map((entry) => `<span>
-                <b>#${String(entry.number).padStart(2, "0")} ${escapeHtml(entry.player)}</b>
-                <small>${escapeHtml(entry.team)}</small>
-              </span>`).join("") : "<em>Waiting on the bracket</em>"}
-            </div>`).join("")}
-          </article>`).join("")}</div>
-        </section>`).join("")}</div>`
-    : `<div class="empty-board"><div><h3>Fixture paths coming soon</h3>
+  const halves = bracketHalves(rounds);
+  if (halves.length !== 2) {
+    $("#pathsView").innerHTML = `<div class="empty-board"><div><h3>Fixture paths coming soon</h3>
       <p>The full bracket will appear when ESPN publishes the knockout schedule.</p></div></div>`;
+    return;
+  }
+  const flags = new Map(qualifiers.map(({ name, flag }) => [normalizeTeam(name), flag]));
+  const team = (entry) => `<span class="tree-team">
+    ${flags.get(normalizeTeam(entry.team))
+      ? `<img src="${escapeHtml(flags.get(normalizeTeam(entry.team)))}" alt="${escapeHtml(entry.team)} flag">`
+      : `<i aria-hidden="true">•</i>`}
+    <span><b>${escapeHtml(entry.team)}</b><small>#${String(entry.number).padStart(2, "0")} ${escapeHtml(entry.player)}</small></span>
+  </span>`;
+  const slot = ({ candidates }) => candidates.length === 1 ? team(candidates[0])
+    : candidates.length ? `<details class="tree-possibilities">
+      <summary>
+        <span class="flag-stack">${candidates.slice(0, 4).map((entry) => flags.get(normalizeTeam(entry.team))
+          ? `<img src="${escapeHtml(flags.get(normalizeTeam(entry.team)))}" alt="">` : "").join("")}</span>
+        <b>${candidates.length} possibilities</b>
+      </summary>
+      <div>${candidates.map(team).join("")}</div>
+    </details>` : `<span class="tree-waiting">Waiting on winner</span>`;
+  const match = (item) => `<article class="tree-match">
+    <header><b>Match ${item.number}</b><span>${formatKickoff(item.date)}</span></header>
+    ${item.sides.map((side) => `<div class="tree-slot">${slot(side)}</div>`).join("")}
+  </article>`;
+  const column = (label, items, side, level) => `<section class="tree-column ${side} level-${level}">
+    <h3>${label}</h3>${items.map(match).join("")}
+  </section>`;
+  const final = rounds.find(({ stage }) => stage === "final")?.matches[0];
+  const third = rounds.find(({ stage }) => stage === "3rd-place-match")?.matches[0];
+  const champion = entries.find(({ stage }) => stage === "CHAMPION");
+  $("#pathsView").innerHTML = `<p class="paths-note">
+    The two sides meet in the middle. Open any future slot to see every possible player and country.
+  </p>
+  <div class="knockout-scroll"><div class="knockout-tree">
+    ${column("Round of 32", halves[0].roundOf32, "left", 0)}
+    ${column("Round of 16", halves[0].roundOf16, "left", 1)}
+    ${column("Quarterfinals", halves[0].quarterfinals, "left", 2)}
+    ${column("Semifinal", [halves[0].semifinal], "left", 3)}
+    <section class="tree-center">
+      <p class="eyebrow">THE FINAL</p>
+      ${final ? match(final) : ""}
+      <div class="champion-card"><small>2026 CHAMPION</small>
+        ${champion ? team(champion) : "<strong>Who takes it?</strong>"}
+      </div>
+      <p class="eyebrow">THIRD PLACE</p>
+      ${third ? match(third) : ""}
+    </section>
+    ${column("Semifinal", [halves[1].semifinal], "right", 3)}
+    ${column("Quarterfinals", halves[1].quarterfinals, "right", 2)}
+    ${column("Round of 16", halves[1].roundOf16, "right", 1)}
+    ${column("Round of 32", halves[1].roundOf32, "right", 0)}
+  </div></div>`;
 }
 
 function showDrawReveal() {
