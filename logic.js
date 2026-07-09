@@ -63,7 +63,10 @@ export function knockoutMatches(entries, events) {
           .map(normalizeTeam);
         const entry = entries.find((item) => names.includes(normalizeTeam(item.team)));
         return {
-          team: team.isActive ? team.displayName : "TBD",
+          // ESPN marks a side inactive after it is eliminated. It is still a
+          // participant in this fixture, though, so retain its name in the
+          // completed match rather than replacing it with a placeholder.
+          team: team.displayName || "TBD",
           flag: team.logo || "",
           score: competitor.score ?? "",
           winner: Boolean(competitor.winner),
@@ -108,7 +111,10 @@ export function bracketPossibilities(entries, events) {
   };
   const possibilities = (competitor) => {
     const entry = entryFor(competitor);
-    if (entry) return entry.stage === "OUT" ? [] : [entry];
+    // A direct fixture participant belongs in the bracket even after being
+    // eliminated. Future fixtures resolve through the winner/loser reference
+    // below, so this does not carry an eliminated team forward.
+    if (entry) return [entry];
     const reference = competitor?.team?.displayName?.match(
       /^(Round of 32|Round of 16|Quarterfinal|Semifinal) (\d+) (Winner|Loser)$/
     );

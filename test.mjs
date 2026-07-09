@@ -135,6 +135,35 @@ const bracketRounds = [
 ].map(([stage, matches]) => ({ stage, matches }));
 assert.deepEqual(bracketHalves(bracketRounds)[0].roundOf32.map(({ number }) => number), [1, 2, 3, 4, 5, 6, 7, 8]);
 
+const eliminatedSide = knockoutMatches(result.entries, [{
+  id: "2",
+  date: "2026-06-29T00:00Z",
+  season: { slug: "round-of-32" },
+  competitions: [{
+    status: { type: { state: "post", completed: true } },
+    competitors: [{
+      score: "0", winner: false,
+      team: { displayName: "South Africa", isActive: false, logo: "rsa.png" }
+    }]
+  }]
+}])[0].sides[0];
+assert.equal(eliminatedSide.team, "South Africa");
+assert.equal(eliminatedSide.entry.player, "Stephanie");
+assert.deepEqual(
+  bracketPossibilities(result.entries, [{
+    id: "3",
+    date: "2026-06-29T00:00Z",
+    season: { slug: "round-of-32" },
+    competitions: [{
+      competitors: [
+        { team: { displayName: "Mexico" } },
+        { team: { displayName: "South Africa" } }
+      ]
+    }]
+  }])[0].matches[0].sides.map(({ candidates }) => candidates.map(({ player }) => player),
+  [["Nabil"], ["Stephanie"]]
+);
+
 const validState = Array.from({ length: 32 }, (_, index) => ({
   number: index + 1, player: `Player ${index + 1}`, team: "", stage: "R32"
 }));
