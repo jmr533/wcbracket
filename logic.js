@@ -63,7 +63,10 @@ export function knockoutMatches(entries, events) {
           .map(normalizeTeam);
         const entry = entries.find((item) => names.includes(normalizeTeam(item.team)));
         return {
-          team: team.isActive ? team.displayName : "TBD",
+          // ESPN marks a side inactive after it is eliminated. It is still a
+          // participant in this fixture, though, so retain its name in the
+          // completed match rather than replacing it with a placeholder.
+          team: team.displayName || "TBD",
           flag: team.logo || "",
           score: competitor.score ?? "",
           winner: Boolean(competitor.winner),
