@@ -111,7 +111,10 @@ export function bracketPossibilities(entries, events) {
   };
   const possibilities = (competitor) => {
     const entry = entryFor(competitor);
-    if (entry) return entry.stage === "OUT" ? [] : [entry];
+    // A direct fixture participant belongs in the bracket even after being
+    // eliminated. Future fixtures resolve through the winner/loser reference
+    // below, so this does not carry an eliminated team forward.
+    if (entry) return [entry];
     const reference = competitor?.team?.displayName?.match(
       /^(Round of 32|Round of 16|Quarterfinal|Semifinal) (\d+) (Winner|Loser)$/
     );

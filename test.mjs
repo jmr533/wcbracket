@@ -149,6 +149,20 @@ const eliminatedSide = knockoutMatches(result.entries, [{
 }])[0].sides[0];
 assert.equal(eliminatedSide.team, "South Africa");
 assert.equal(eliminatedSide.entry.player, "Stephanie");
+assert.deepEqual(
+  bracketPossibilities(result.entries, [{
+    id: "3",
+    date: "2026-06-29T00:00Z",
+    season: { slug: "round-of-32" },
+    competitions: [{
+      competitors: [
+        { team: { displayName: "Mexico" } },
+        { team: { displayName: "South Africa" } }
+      ]
+    }]
+  }])[0].matches[0].sides.map(({ candidates }) => candidates.map(({ player }) => player),
+  [["Nabil"], ["Stephanie"]]
+);
 
 const validState = Array.from({ length: 32 }, (_, index) => ({
   number: index + 1, player: `Player ${index + 1}`, team: "", stage: "R32"
